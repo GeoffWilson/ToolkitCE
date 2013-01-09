@@ -1,0 +1,52 @@
+10
+
+dir
+78
+https://rpgcode.googlecode.com/svn/trunk/src/uk/co/tkce/toolkit
+https://rpgcode.googlecode.com/svn
+
+
+
+2011-06-09T23:59:39.861898Z
+78
+geoff.a.wilson@googlemail.com
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+52660444-5d53-0410-a2ad-4df87bb8d04b
+
+assets
+dir
+
+editor
+dir
+
+exceptions
+dir
+
+html
+dir
+
+menus
+dir
+
+test
+dir
+
+types
+dir
+
+utilities
+dir
+

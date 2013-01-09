@@ -1,0 +1,12 @@
+package uk.co.tkce.engine.InternalObjects;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: Geoff
+ * Date: 25/12/10
+ * Time: 19:00
+ * To change this template use File | Settings | File Templates.
+ */
+public class MathLibrary
+{
+}

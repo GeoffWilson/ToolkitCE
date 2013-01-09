@@ -1,0 +1,99 @@
+package uk.co.tkce.engine;
+
+import uk.co.tkce.toolkit.types.Board;
+import uk.co.tkce.toolkit.types.Player;
+import uk.co.tkce.toolkit.types.TKVector;
+
+import java.awt.*;
+import java.awt.geom.Area;
+import java.util.ArrayList;
+
+public class PhysicsEngine
+{
+    private int delta;
+
+    private ArrayList<Area> collisionShapes;
+
+    private Player activePlayer;
+
+    public PhysicsEngine()
+    {
+
+    }
+
+    public void setCollisionDelta(int delta)
+    {
+        this.delta = delta;
+    }
+
+    public void setActivePlayer(Player newPlayer)
+    {
+        this.activePlayer = newPlayer;
+    }
+
+    public void loadNewBoardVectors(Board newBoard)
+    {
+        collisionShapes = new ArrayList<>();
+
+        for (TKVector vector : newBoard.getVectors())
+        {
+            if (vector.getTileType() == 1)
+            {
+                Polygon newShape = new Polygon();
+                for (Point point : vector.getPoints())
+                {
+                    newShape.addPoint(point.x, point.y);
+                }
+                collisionShapes.add(new Area(newShape));
+            }
+        }
+    }
+
+    /**
+     * Checks to see if the players vector has collided with any of the board vectors,
+     * (actually checks if the player *will* collide if moved)
+     *
+     * @param direction Need to know the direction to correctly calculate collisions
+     * @param shiftX    Temporary value - will be extracted into Player
+     * @param shiftY    Temporary value - will be extracted into Player
+     * @return true if will collide, false if not.
+     */
+    public boolean checkCollision(int direction, int shiftX, int shiftY)
+    {
+        int correctX = 0;
+        int correctY = 0;
+
+        switch (direction)
+        {
+            case Player.DIRECTION_NORTH:
+                correctX = activePlayer.getVectorCorrectionX();
+                correctY = activePlayer.getVectorCorrectionY() - delta;
+                break;
+            case Player.DIRECTION_SOUTH:
+                correctX = activePlayer.getVectorCorrectionX();
+                correctY = activePlayer.getVectorCorrectionY() + delta;
+                break;
+            case Player.DIRECTION_EAST:
+                correctX = activePlayer.getVectorCorrectionX() + delta;
+                correctY = activePlayer.getVectorCorrectionY();
+                break;
+            case Player.DIRECTION_WEST:
+                correctX = activePlayer.getVectorCorrectionX() - delta;
+                correctY = activePlayer.getVectorCorrectionY();
+                break;
+        }
+
+        for (Area shape : collisionShapes)
+        {
+            Area newShape = (Area) shape.clone();
+            newShape.intersect(activePlayer.getCollisionArea(correctX, correctY, shiftX, shiftY));
+
+            if (!newShape.isEmpty())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
