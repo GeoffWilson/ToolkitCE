@@ -1,26 +1,18 @@
 package uk.co.tkce.engine;
 
 import net.java.games.input.Component;
-
-import sun.audio.AudioPlayer;
-import sun.audio.AudioStream;
 import uk.co.tkce.engine.InternalObjects.MessageWindowLibrary;
 import uk.co.tkce.engine.InternalObjects.TestSpriteObject;
-import uk.co.tkce.engine.VGM.MusicEmu;
-import uk.co.tkce.engine.VGM.VGMPlayer;
 import uk.co.tkce.toolkit.types.*;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -28,15 +20,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author geoff wilson (contact at gawilson.net)
  * @version svn
  */
-public class GraphicsEngine
-{
+public class GraphicsEngine {
     private BufferStrategy strategy;
     private GameControl control;
     private TileSetCache cache;
     private PhysicsEngine physicsEngine;
     private XboxControllerSupport xbcs;
     private AudioEngine audio;
-    private VGMPlayer vgm;
 
     private boolean leftPressed = false;
     private boolean rightPressed = false;
@@ -95,8 +85,7 @@ public class GraphicsEngine
      *
      * @param control Loop back to game control for making requests!
      */
-    public GraphicsEngine(GameControl control)
-    {
+    public GraphicsEngine(GameControl control) {
         this.control = control;
         cache = new TileSetCache();
 
@@ -117,20 +106,15 @@ public class GraphicsEngine
 
         //this.fullScreen = true;
 
-        if (this.fullScreen)
-        {
+        if (this.fullScreen) {
             container.setUndecorated(true);
-            if (graphicsDevice.isFullScreenSupported())
-            {
+            if (graphicsDevice.isFullScreenSupported()) {
                 graphicsDevice.setFullScreenWindow(container);
-            }
-            else
-            {
+            } else {
                 System.out.println("Full screen is not supported on your system :(");
             }
         }
-        if (graphicsDevice.isDisplayChangeSupported())
-        {
+        if (graphicsDevice.isDisplayChangeSupported()) {
             graphicsDevice.setDisplayMode(new DisplayMode(this.resolutionX, this.resolutionY, colorDepth, DisplayMode.REFRESH_RATE_UNKNOWN));
         }
 
@@ -140,10 +124,8 @@ public class GraphicsEngine
         container.pack();
         container.setResizable(false);
         container.setVisible(true);
-        container.addWindowListener(new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
+        container.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
                 System.exit(0);
             }
         });
@@ -174,8 +156,7 @@ public class GraphicsEngine
         xbcs = new XboxControllerSupport();
     }
 
-    public void preparePhysics()
-    {
+    public void preparePhysics() {
         // Setup the physics engine
         physicsEngine = new PhysicsEngine();
         physicsEngine.setCollisionDelta(playerMove);
@@ -189,8 +170,7 @@ public class GraphicsEngine
      *
      * @param newBoard Board file to switch to
      */
-    public void switchBoard(Board newBoard)
-    {
+    public void switchBoard(Board newBoard) {
         activeBoard = newBoard;
         activeBoard.loadTilesForEngine(cache);
 
@@ -209,13 +189,11 @@ public class GraphicsEngine
         boolean noXScroll = width * 32 <= resolutionX;
         boolean noYScroll = height * 32 <= resolutionY;
 
-        if ((width * 32) >= resolutionX)
-        {
+        if ((width * 32) >= resolutionX) {
             maxShiftX = (width * 32) - resolutionX;
         }
 
-        if ((height * 32) >= resolutionY)
-        {
+        if ((height * 32) >= resolutionY) {
             maxShiftY = (height * 32) - resolutionY;
         }
 
@@ -223,59 +201,35 @@ public class GraphicsEngine
         int halfResolutionY = resolutionY / 2;
 
         // Calculate correct starting position
-        if (!noXScroll)
-        {
-        if (activePlayer.getXLocation() > (halfResolutionX + maxShiftX))
-        {
-            shiftX = maxShiftX;
-            activePlayer.adjustX(-activePlayer.getXLocation());
-        }
-        else if (activePlayer.getXLocation() > halfResolutionX)
-        {
-            shiftX = activePlayer.getXLocation() - halfResolutionX;
-            activePlayer.adjustX(-shiftX);
-        }
+        if (!noXScroll) {
+            if (activePlayer.getXLocation() > (halfResolutionX + maxShiftX)) {
+                shiftX = maxShiftX;
+                activePlayer.adjustX(-activePlayer.getXLocation());
+            } else if (activePlayer.getXLocation() > halfResolutionX) {
+                shiftX = activePlayer.getXLocation() - halfResolutionX;
+                activePlayer.adjustX(-shiftX);
+            }
         }
 
-        if (!noYScroll)
-        {
-        if (activePlayer.getYLocation() > (halfResolutionY + maxShiftY))
-        {
-            shiftY = maxShiftY;
-            activePlayer.adjustY(-shiftY);
-        }
-        else if (activePlayer.getYLocation() > halfResolutionY)
-        {
-            shiftY = activePlayer.getYLocation() - halfResolutionY;
-            activePlayer.adjustY(-shiftY);
-        }
+        if (!noYScroll) {
+            if (activePlayer.getYLocation() > (halfResolutionY + maxShiftY)) {
+                shiftY = maxShiftY;
+                activePlayer.adjustY(-shiftY);
+            } else if (activePlayer.getYLocation() > halfResolutionY) {
+                shiftY = activePlayer.getYLocation() - halfResolutionY;
+                activePlayer.adjustY(-shiftY);
+            }
         }
 
         sprites = activeBoard.getSprites();
 
         boardLayers = new BufferedImage[activeBoard.getLayers()];
-        for (int i = 0; i < boardLayers.length; i++)
-        {
+        for (int i = 0; i < boardLayers.length; i++) {
             boardLayers[i] = new BufferedImage(activeBoard.getWidth() * 32, activeBoard.getHeight() * 32, BufferedImage.TYPE_INT_ARGB);
         }
 
         boardChanged = true;
 
-        try
-        {
-            vgm = new VGMPlayer(22000);
-
-            String fileName = activePlayer.getName().equals("Bowie") ? "http://piglet.co/town.vgm" : "http://piglet.co/derp.vgm";
-            vgm.loadFile(fileName, fileName);
-            System.out.println(vgm.getVolume());
-            System.out.println(vgm.getTrackCount());
-            //vgm.play();
-            vgm.startTrack(1,1000);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -284,8 +238,7 @@ public class GraphicsEngine
      *
      * @param newPlayer Player file for the new character to use.
      */
-    public void switchPlayer(Player newPlayer)
-    {
+    public void switchPlayer(Player newPlayer) {
         activePlayer = newPlayer;
 
         // get players vector
@@ -299,116 +252,88 @@ public class GraphicsEngine
         activePlayer.preparePhysics(playerImage.getWidth(), playerImage.getHeight());
     }
 
-    private class KeyInputHandler extends KeyAdapter
-    {
-        public void keyPressed(KeyEvent e)
-        {
-            if (e.getKeyCode() == KeyEvent.VK_LEFT)
-            {
+    private class KeyInputHandler extends KeyAdapter {
+        public void keyPressed(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_LEFT) {
                 leftPressed = true;
             }
-            if (e.getKeyCode() == KeyEvent.VK_RIGHT)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                 rightPressed = true;
             }
-            if (e.getKeyCode() == KeyEvent.VK_UP)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_UP) {
                 upPressed = true;
             }
-            if (e.getKeyCode() == KeyEvent.VK_DOWN)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_DOWN) {
                 downPressed = true;
             }
-            if (e.getKeyCode() == KeyEvent.VK_SPACE)
-            {
-                if (spacePressCount < 1)
-                {
-                    try
-                    {
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                if (spacePressCount < 1) {
+                    try {
                         testSpriteMap.add(new TestSpriteObject(activePlayer.getXLocation() + 55, activePlayer.getYLocation() + 28));
-                    }
-                    catch (Exception ex)
-                    {
+                    } catch (Exception ex) {
                         ex.printStackTrace();
                     }
                     spacePressed = true;
-                    spacePressCount ++;
+                    spacePressCount++;
                 }
 
             }
-            if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                 System.exit(0);
             }
-            if (e.getKeyCode() == KeyEvent.VK_ENTER)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                 // Menu
                 drawMenu = true;
             }
-            if (e.getKeyCode() == KeyEvent.VK_V)
-            {
-                if (pressCount < 1)
-                {
+            if (e.getKeyCode() == KeyEvent.VK_V) {
+                if (pressCount < 1) {
                     vPressed = !vPressed;
                     pressCount++;
                 }
             }
 
-            if (e.getKeyCode() == KeyEvent.VK_F12)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_F12) {
                 control.pauseGame();
             }
 
-            if (e.getKeyCode() == KeyEvent.VK_F)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_F) {
                 fPressed = !fPressed;
             }
 
-            if (e.getKeyCode() == KeyEvent.VK_D)
-            {
-                if (dPressCount < 1)
-                {
+            if (e.getKeyCode() == KeyEvent.VK_D) {
+                if (dPressCount < 1) {
                     dPressed = !dPressed;
                     dPressCount++;
                 }
             }
         }
 
-        public void keyReleased(KeyEvent e)
-        {
-            if (e.getKeyCode() == KeyEvent.VK_LEFT)
-            {
+        public void keyReleased(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_LEFT) {
                 leftPressed = false;
             }
-            if (e.getKeyCode() == KeyEvent.VK_RIGHT)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                 rightPressed = false;
             }
-            if (e.getKeyCode() == KeyEvent.VK_UP)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_UP) {
                 upPressed = false;
             }
-            if (e.getKeyCode() == KeyEvent.VK_DOWN)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_DOWN) {
                 downPressed = false;
             }
-            if (e.getKeyCode() == KeyEvent.VK_V)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_V) {
                 pressCount--;
             }
-            if (e.getKeyCode() == KeyEvent.VK_D)
-            {
+            if (e.getKeyCode() == KeyEvent.VK_D) {
                 dPressCount--;
             }
-            if (e.getKeyCode() == KeyEvent.VK_SPACE)
-            {
-                spacePressCount --;
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                spacePressCount--;
                 shotFired = false;
             }
         }
 
-        public void keyTyped(KeyEvent e)
-        {
+        public void keyTyped(KeyEvent e) {
 
         }
     }
@@ -416,28 +341,21 @@ public class GraphicsEngine
     /**
      * Renders the next frame.
      */
-    public void renderFrame()
-    {
+    public void renderFrame() {
         // Enable AA for vectors
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
         // Draw background image first
-        for (BoardImage backgroundImage : activeBoard.getBackgroundImages())
-        {
+        for (BoardImage backgroundImage : activeBoard.getBackgroundImages()) {
             g.drawImage(backgroundImage.getAsImage(), (-shiftX / backgroundImage.getScrollRatio()), (-shiftY / backgroundImage.getScrollRatio()), width * 32, height * 32, null);
         }
 
-        for (int w = 0; w < layers; w++)
-        {
-            if (boardChanged)
-            {
-                for (int x = 0; x < activeBoard.getWidth(); x++)
-                {
-                    for (int y = 0; y < activeBoard.getHeight(); y++)
-                    {
+        for (int w = 0; w < layers; w++) {
+            if (boardChanged) {
+                for (int x = 0; x < activeBoard.getWidth(); x++) {
+                    for (int y = 0; y < activeBoard.getHeight(); y++) {
                         int indexToPaint = activeBoard.getIndexAtLocation(x, y, w) - 1;
-                        if (indexToPaint >= 0)
-                        {
+                        if (indexToPaint >= 0) {
                             boardLayers[w].getGraphics().drawImage(activeBoard.getTileFromIndex(indexToPaint).getTileAsImage(), (x * 32), (y * 32), null);
                         }
                     }
@@ -447,21 +365,18 @@ public class GraphicsEngine
 
             g.drawImage(boardLayers[w], 0 - shiftX, 0 - shiftY, null);
 
-            if (w == activeBoard.getStartingLayer() - 1)
-            {
+            if (w == activeBoard.getStartingLayer() - 1) {
                 g.drawImage(playerImage, activePlayer.getXLocation(), activePlayer.getYLocation(), null);
             }
 
-            for (BoardSprite sprite : sprites)
-            {
+            for (BoardSprite sprite : sprites) {
                 g.drawImage(sprite.getAnimationFrame(), (int) sprite.getX() - shiftX - (sprite.getWidth() / 2), (int) sprite.getY() - shiftY - sprite.getHeight(), null);
             }
         }
 
-        for (TestSpriteObject image : testSpriteMap)
-        {
+        for (TestSpriteObject image : testSpriteMap) {
             if (image.getX() > resolutionX) testSpriteMap.remove(image);
-            g.drawImage(image.image, image.getX(), image.getY(),null);
+            g.drawImage(image.image, image.getX(), image.getY(), null);
         }
 
         // Pass the graphics object to the debugging tools, comment this line out for release
@@ -471,18 +386,15 @@ public class GraphicsEngine
         strategy.show();
     }
 
-    private void debugTools(Graphics2D g)
-    {
+    private void debugTools(Graphics2D g) {
 
-        if (fPressed)
-        {
+        if (fPressed) {
             g.drawImage(new MessageWindowLibrary("Good Morning!").getMessageWindowToRender(), 41, 327, null);
         }
 
         // Show debug information (x,y,fps) if D is pressed
-        if (dPressed)
-        {
-                  // Draw debug information
+        if (dPressed) {
+            // Draw debug information
             g.setColor(Color.WHITE);
 
             g.drawImage(overlayImage, 0, 0, null);
@@ -495,14 +407,11 @@ public class GraphicsEngine
             g.drawString("full screen: " + fullScreen, 30, 70);
 
             // Calculates estimated FPS
-            if ((System.currentTimeMillis() - firstFrame) > 1000)
-            {
+            if ((System.currentTimeMillis() - firstFrame) > 1000) {
                 lastFPS = fps;
                 fps = 0;
                 firstFrame = System.currentTimeMillis();
-            }
-            else
-            {
+            } else {
                 fps++;
             }
         }
@@ -511,10 +420,8 @@ public class GraphicsEngine
     /**
      * Method to check input from the user, this code will support game pads in the future.
      */
-    public void checkLogic()
-    {
-        if(physicsEngine.checkItemActivations(Player.DIRECTION_NORTH, shiftX, shiftY))
-        {
+    public void checkLogic() {
+        if (physicsEngine.checkItemActivations(Player.DIRECTION_NORTH, shiftX, shiftY)) {
             Board b = new Board(new File(System.getProperty("project.path") + "/boards/home_2.brd"));
             this.switchBoard(b);
             this.preparePhysics();
@@ -522,12 +429,9 @@ public class GraphicsEngine
 
         playerImage = activePlayer.getAnimationFrame();
 
-        if (upPressed && !downPressed)
-        {
-            if (currentDirection != Player.DIRECTION_NORTH)
-            {
-                if ((!leftPressed) && (!rightPressed))
-                {
+        if (upPressed && !downPressed) {
+            if (currentDirection != Player.DIRECTION_NORTH) {
+                if ((!leftPressed) && (!rightPressed)) {
                     activePlayer.setActiveAnimation(Player.DIRECTION_NORTH);
                     currentDirection = Player.DIRECTION_NORTH;
                 }
@@ -535,33 +439,22 @@ public class GraphicsEngine
 
             playerImage = activePlayer.getAnimationFrame();
 
-            if (!physicsEngine.checkCollision(Player.DIRECTION_NORTH, shiftX, shiftY))
-            {
-                if (activePlayer.getYLocation() >= resolutionY / 2)
-                {
+            if (!physicsEngine.checkCollision(Player.DIRECTION_NORTH, shiftX, shiftY)) {
+                if (activePlayer.getYLocation() >= resolutionY / 2) {
                     activePlayer.adjustY(-playerMove);
-                }
-                else
-                {
-                    if (shiftY > 0)
-                    {
+                } else {
+                    if (shiftY > 0) {
                         shiftY -= playerMove;
-                    }
-                    else
-                    {
+                    } else {
                         activePlayer.adjustY(-playerMove);
                     }
                 }
 
             }
 
-        }
-        else if (downPressed && !upPressed)
-        {
-            if (currentDirection != Player.DIRECTION_SOUTH)
-            {
-                if ((!leftPressed) && (!rightPressed))
-                {
+        } else if (downPressed && !upPressed) {
+            if (currentDirection != Player.DIRECTION_SOUTH) {
+                if ((!leftPressed) && (!rightPressed)) {
                     activePlayer.setActiveAnimation(Player.DIRECTION_SOUTH);
                     currentDirection = Player.DIRECTION_SOUTH;
                 }
@@ -569,83 +462,57 @@ public class GraphicsEngine
 
             playerImage = activePlayer.getAnimationFrame();
 
-            if (!physicsEngine.checkCollision(Player.DIRECTION_SOUTH, shiftX, shiftY))
-            {
-                if (activePlayer.getYLocation() <= resolutionY / 2)
-                {
+            if (!physicsEngine.checkCollision(Player.DIRECTION_SOUTH, shiftX, shiftY)) {
+                if (activePlayer.getYLocation() <= resolutionY / 2) {
                     activePlayer.adjustY(playerMove);
-                }
-                else
-                {
+                } else {
                     int maxShift = (height * 32) - resolutionY;
-                    if (shiftY < maxShift)
-                    {
+                    if (shiftY < maxShift) {
                         shiftY += playerMove;
-                    }
-                    else
-                    {
+                    } else {
                         activePlayer.adjustY(playerMove);
                     }
                 }
             }
         }
 
-        if (leftPressed && !rightPressed)
-        {
-            if (currentDirection != Player.DIRECTION_WEST)
-            {
+        if (leftPressed && !rightPressed) {
+            if (currentDirection != Player.DIRECTION_WEST) {
                 activePlayer.setActiveAnimation(Player.DIRECTION_WEST);
                 currentDirection = Player.DIRECTION_WEST;
             }
 
             playerImage = activePlayer.getAnimationFrame();
 
-            if (!physicsEngine.checkCollision(Player.DIRECTION_WEST, shiftX, shiftY))
-            {
-                if (activePlayer.getXLocation() >= resolutionX / 2)
-                {
+            if (!physicsEngine.checkCollision(Player.DIRECTION_WEST, shiftX, shiftY)) {
+                if (activePlayer.getXLocation() >= resolutionX / 2) {
                     activePlayer.adjustX(-playerMove);
-                }
-                else
-                {
-                    if (shiftX > 0)
-                    {
+                } else {
+                    if (shiftX > 0) {
                         shiftX -= playerMove;
-                    }
-                    else
-                    {
+                    } else {
                         activePlayer.adjustX(-playerMove);
 
                     }
                 }
             }
 
-        }
-        else if (rightPressed && !leftPressed)
-        {
-            if (currentDirection != Player.DIRECTION_EAST)
-            {
+        } else if (rightPressed && !leftPressed) {
+            if (currentDirection != Player.DIRECTION_EAST) {
                 activePlayer.setActiveAnimation(Player.DIRECTION_EAST);
                 currentDirection = Player.DIRECTION_EAST;
             }
 
             playerImage = activePlayer.getAnimationFrame();
 
-            if (!physicsEngine.checkCollision(Player.DIRECTION_EAST, shiftX, shiftY))
-            {
-                if (activePlayer.getXLocation() <= resolutionX / 2)
-                {
+            if (!physicsEngine.checkCollision(Player.DIRECTION_EAST, shiftX, shiftY)) {
+                if (activePlayer.getXLocation() <= resolutionX / 2) {
                     activePlayer.adjustX(playerMove);
-                }
-                else
-                {
+                } else {
                     int maxShift = (width * 32) - resolutionX;
-                    if (shiftX < maxShift)
-                    {
+                    if (shiftX < maxShift) {
                         shiftX += playerMove;
-                    }
-                    else
-                    {
+                    } else {
                         activePlayer.adjustX(playerMove);
                     }
                 }
@@ -653,8 +520,7 @@ public class GraphicsEngine
         }
     }
 
-    private void logic()
-    {
+    private void logic() {
         float dPadPosition = xbcs.getDPadPosition();
 
         rightPressed = dPadPosition == Component.POV.RIGHT || dPadPosition == Component.POV.UP_RIGHT ||
@@ -666,33 +532,26 @@ public class GraphicsEngine
         upPressed = dPadPosition == Component.POV.UP || dPadPosition == Component.POV.UP_LEFT ||
                 dPadPosition == Component.POV.UP_RIGHT || upPressed;
 
-        downPressed = dPadPosition == Component.POV.DOWN ||dPadPosition == Component.POV.DOWN_LEFT ||
+        downPressed = dPadPosition == Component.POV.DOWN || dPadPosition == Component.POV.DOWN_LEFT ||
                 dPadPosition == Component.POV.DOWN_RIGHT || downPressed;
 
         activePlayer.isMoving(rightPressed || leftPressed || upPressed || downPressed || true);
     }
 
-    public void begin()
-    {
+    public void begin() {
         double lastFrameTime = System.currentTimeMillis();
         double targetFPS = 1000 / 60; // 60 fps
-        while (!finished)
-        {
-            if (!fullScreen)
-            {
-                if(lastFrameTime + targetFPS < System.currentTimeMillis())
-                {
+        while (!finished) {
+            if (!fullScreen) {
+                if (lastFrameTime + targetFPS < System.currentTimeMillis()) {
                     this.logic();
                     this.checkLogic();
                     lastFrameTime = System.currentTimeMillis();
                 }
-            }
-            else
-            {
-                if (!fPressed)
-                {
-                this.logic();
-                this.checkLogic();
+            } else {
+                if (!fPressed) {
+                    this.logic();
+                    this.checkLogic();
                 }
             }
 

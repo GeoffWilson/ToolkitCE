@@ -9,8 +9,7 @@ import java.awt.*;
 import java.awt.geom.Area;
 import java.util.ArrayList;
 
-public class PhysicsEngine
-{
+public class PhysicsEngine {
     private int delta;
 
     private ArrayList<Area> collisionShapes;
@@ -21,42 +20,34 @@ public class PhysicsEngine
     private int correctX;
     private int correctY;
 
-    public PhysicsEngine()
-    {
+    public PhysicsEngine() {
 
     }
 
-    public void setCollisionDelta(int delta)
-    {
+    public void setCollisionDelta(int delta) {
         this.delta = delta;
     }
 
-    public void setActivePlayer(Player newPlayer)
-    {
+    public void setActivePlayer(Player newPlayer) {
         this.activePlayer = newPlayer;
     }
 
-    public void loadNewBoardVectors(Board newBoard)
-    {
+    public void loadNewBoardVectors(Board newBoard) {
         collisionShapes = new ArrayList<>();
         itemShapes = new ArrayList<>();
 
-        for (TKVector vector : newBoard.getVectors())
-        {
+        for (TKVector vector : newBoard.getVectors()) {
             Polygon newShape = new Polygon();
-            for (Point point : vector.getPoints())
-            {
+            for (Point point : vector.getPoints()) {
                 newShape.addPoint(point.x, point.y);
             }
             if (vector.getTileType() == 1) collisionShapes.add(new Area(newShape));
         }
 
-        for (BoardProgram program : newBoard.getPrograms())
-        {
+        for (BoardProgram program : newBoard.getPrograms()) {
             Polygon newShape = new Polygon();
             TKVector vector = program.getVector();
-            for (Point point : vector.getPoints())
-            {
+            for (Point point : vector.getPoints()) {
                 newShape.addPoint(point.x, point.y);
             }
 
@@ -73,17 +64,14 @@ public class PhysicsEngine
      * @param shiftY    Temporary value - will be extracted into Player
      * @return true if will collide, false if not.
      */
-    public boolean checkCollision(int direction, int shiftX, int shiftY)
-    {
+    public boolean checkCollision(int direction, int shiftX, int shiftY) {
         calculateDifferences(direction);
 
-        for (Area shape : collisionShapes)
-        {
+        for (Area shape : collisionShapes) {
             Area newShape = (Area) shape.clone();
             newShape.intersect(activePlayer.getCollisionArea(correctX, correctY, shiftX, shiftY));
 
-            if (!newShape.isEmpty())
-            {
+            if (!newShape.isEmpty()) {
                 return true;
             }
         }
@@ -91,30 +79,25 @@ public class PhysicsEngine
         return false;
     }
 
-    public boolean checkItemActivations(int direction, int shiftX, int shiftY)
-    {
+    public boolean checkItemActivations(int direction, int shiftX, int shiftY) {
 
         calculateDifferences(direction);
 
         // Check item collisions
-        for (Area shape : itemShapes)
-        {
+        for (Area shape : itemShapes) {
             Area newShape = (Area) shape.clone();
             newShape.intersect(activePlayer.getCollisionArea(correctX, correctY, shiftX, shiftY));
 
-            if (!newShape.isEmpty())
-            {
+            if (!newShape.isEmpty()) {
                 return true;
             }
         }
 
-        //return false;
+        return false;
     }
 
-    private void calculateDifferences(int direction)
-    {
-        switch (direction)
-        {
+    private void calculateDifferences(int direction) {
+        switch (direction) {
             case Player.DIRECTION_NORTH:
                 correctX = activePlayer.getVectorCorrectionX();
                 correctY = activePlayer.getVectorCorrectionY() - delta;
